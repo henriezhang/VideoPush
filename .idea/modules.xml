@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/Push.iml" filepath="$PROJECT_DIR$/Push.iml" />
+      <module fileurl="file://$PROJECT_DIR$/pushrecommendation.iml" filepath="$PROJECT_DIR$/pushrecommendation.iml" />
+      <module fileurl="file://$PROJECT_DIR$/videopush.iml" filepath="$PROJECT_DIR$/videopush.iml" />
+    </modules>
+  </component>
+</project>
+
