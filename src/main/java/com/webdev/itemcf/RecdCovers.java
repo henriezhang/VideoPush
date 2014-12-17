@@ -2,7 +2,6 @@ package com.webdev.itemcf;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -21,15 +20,15 @@ public class RecdCovers {
     public static void main(String[] args) throws Exception {
         Configuration conf = new Configuration();
         String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
-        if (otherArgs.length < 6) {
+        if (otherArgs.length < 4) {
             System.err.println("Usage: hadoop jar RecdCovers <in> <out> <topn> <tag>");
-            System.exit(6);
+            System.exit(4);
         }
 
         String in = otherArgs[0];
         String out = otherArgs[1];
         String topn = otherArgs[2];
-        conf.set("cover.cf.topn", otherArgs[4]);
+        conf.set("cover.cf.topn", topn);
 
         Job job = new Job(conf, "RecdCovers");
         job.setJarByClass(RecdCovers.class);
@@ -40,11 +39,11 @@ public class RecdCovers {
 
         // the map output is IntWriteable, Text
         job.setMapOutputKeyClass(Text.class);
-        job.setMapOutputValueClass(IntWritable.class);
+        job.setMapOutputValueClass(Text.class);
 
         // the reduce output is IntWriteable, Text
         job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(IntWritable.class);
+        job.setOutputValueClass(Text.class);
 
         FileInputFormat.addInputPath(job, new Path(in));
         FileOutputFormat.setOutputPath(job, new Path(out));
@@ -58,7 +57,7 @@ public class RecdCovers {
         ) throws IOException, InterruptedException {
             String[] fields = inValue.toString().split("\t");
             if (fields.length >= 2) {
-                context.write(new Text(fields[0]), new Text(fields[2]));
+                context.write(new Text(fields[0]), new Text(fields[1]));
             }
         }
     }
@@ -72,11 +71,16 @@ public class RecdCovers {
             HashMap coverMap = new HashMap<String, Integer>();
             for (Text val : values) {
                 String items[] = val.toString().split(":");
+                int tmpv = 0;
+                try {
+                    tmpv = Integer.parseInt(items[1]);
+                } catch (Exception e) {
+                }
                 if (!coverMap.containsKey(items[0])) {
-                    coverMap.put(items[0], Integer.parseInt(items[1]));
+                    coverMap.put(items[0], tmpv);
                 } else {
-                    Integer sum = (Integer) coverMap.get(items[0]);
-                    coverMap.put(items[0], sum + items[1]);
+                    int sum = ((Integer) coverMap.get(items[0])).intValue();
+                    coverMap.put(items[0], sum + tmpv);
                 }
             }
 
@@ -105,11 +109,16 @@ public class RecdCovers {
             HashMap coverMap = new HashMap<String, Integer>();
             for (Text val : values) {
                 String items[] = val.toString().split(":");
+                int tmpv = 0;
+                try {
+                    tmpv = Integer.parseInt(items[1]);
+                } catch (Exception e) {
+                }
                 if (!coverMap.containsKey(items[0])) {
-                    coverMap.put(items[0], Integer.parseInt(items[1]));
+                    coverMap.put(items[0], tmpv);
                 } else {
-                    Integer sum = (Integer) coverMap.get(items[0]);
-                    coverMap.put(items[0], sum + items[1]);
+                    int sum = ((Integer) coverMap.get(items[0])).intValue();
+                    coverMap.put(items[0], sum + tmpv);
                 }
             }
 
@@ -117,16 +126,23 @@ public class RecdCovers {
             Collections.sort(arrayList, new Comparator<Map.Entry<String, Integer>>() {
                 public int compare(Map.Entry<String, Integer> e1,
                                    Map.Entry<String, Integer> e2) {
-                return (e2.getValue()).compareTo(e1.getValue());
+                    return (e2.getValue()).compareTo(e1.getValue());
                 }
             });
 
             int topn = topnFlag;
+            StringBuilder sb = new StringBuilder();
             for (Map.Entry<String, Integer> entry : arrayList) {
                 if (topn-- < 0) {
                     break;
                 }
-                context.write(id, new Text(entry.getKey() + "|" + entry.getValue()));
+                sb.append(",");
+                sb.append(entry.getKey());
+                sb.append(":");
+                sb.append(entry.getValue());
+            }
+            if(sb.length()>1) {
+                context.write(id, new Text(sb.substring(1)));
             }
         }
     }

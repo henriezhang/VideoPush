@@ -26,9 +26,9 @@ public class CandidateCovers {
         Configuration conf = new Configuration();
         String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
         System.err.println(otherArgs.length + ":" + otherArgs.toString());
-        if (otherArgs.length < 5) {
+        if (otherArgs.length < 4) {
             System.err.println("Usage: hadoop jar CandidateCovers <in_pref> <in_pair> <out> <tag>");
-            System.exit(5);
+            System.exit(4);
         }
 
         String inPref = otherArgs[0];
@@ -76,21 +76,21 @@ public class CandidateCovers {
             String[] fields = inValue.toString().split("\t");
             if (fields.length == 2) {
                 mUin = pUin.matcher(fields[0]);
-                if(mUin.find()) { // 用户评分数据
-                    if(fields[0].length()==32){ // 32为uin长度
-                        String prefs[] = fields[0].split(",");
-                        for(String pref : prefs) {
-                            String item[] = pref.split(":");
-                            if(item.length==2) {
-                                context.write(new Text(item[0]), new Text(fields[0]+":"+item[1]));
-                            }
+                if (mUin.find()) { // 专辑同好对数据
+                    if (fields[0].length() == 31) { // 31为coverid+:+coverid长度
+                        String covers[] = fields[0].split(":");
+                        if (covers.length == 2) {
+                            context.write(new Text(covers[0]), new Text(covers[1] + ":" + fields[1]));
                         }
                     }
-                } else { // 专辑同好对数据
-                    if(fields[0].length()==31){ // 31为coverid+:+coverid长度
-                        String covers[] = fields[0].split(":");
-                        if(covers.length==2) {
-                            context.write(new Text(covers[0]), new Text(covers[1]+":"+fields[1]));
+                } else { // 用户评分数据
+                    if (fields[0].length() == 32) { // 32为uin长度
+                        String prefs[] = fields[1].split(",");
+                        for (String pref : prefs) {
+                            String item[] = pref.split(":");
+                            if (item.length == 2) {
+                                context.write(new Text(item[0]), new Text(fields[0] + ":" + item[1]));
+                            }
                         }
                     }
                 }
@@ -108,7 +108,7 @@ public class CandidateCovers {
             HashMap coverMap = new HashMap<String, Integer>();
             for (Text item : values) {
                 String fields[] = item.toString().split(":");
-                if(fields.length==2) {
+                if (fields.length == 2) {
                     if (fields[0].length() == 32) { // 用户评分数据
                         uin = new Text(fields[0]);
                         score = Integer.parseInt(fields[1]);
@@ -118,14 +118,17 @@ public class CandidateCovers {
                 }
             }
 
-            if (score!=0) { // 输出数据
+            if (uin != null) { // 输出数据
                 Iterator hit = coverMap.entrySet().iterator();
-                StringBuilder sBuilder = new StringBuilder("");
                 while (hit.hasNext()) {
                     Map.Entry entry = (Map.Entry) hit.next();
-                    String coverId = (String)entry.getKey();
-                    int value = score * (Integer)entry.getKey();
-                    context.write(uin, new Text(coverId+":"+value));
+                    String coverId = (String) entry.getKey();
+                    int value = 0;
+                    try {
+                        value = score * ((Integer) entry.getValue()).intValue();
+                    } catch (Exception e) {
+                    }
+                    context.write(uin, new Text(coverId + ":" + value));
                 } // end while
             }
         }

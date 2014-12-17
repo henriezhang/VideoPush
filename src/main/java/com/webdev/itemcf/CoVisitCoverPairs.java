@@ -23,9 +23,9 @@ public class CoVisitCoverPairs {
     public static void main(String[] args) throws Exception {
         Configuration conf = new Configuration();
         String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
-        if (otherArgs.length < 6) {
+        if (otherArgs.length < 3) {
             System.err.println("Usage: hadoop jar CoVisitCoverPairs <in> <out> <tag>");
-            System.exit(6);
+            System.exit(3);
         }
 
         String in = otherArgs[0];

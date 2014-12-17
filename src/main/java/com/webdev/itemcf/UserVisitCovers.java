@@ -50,14 +50,16 @@ public class UserVisitCovers {
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(Text.class);
 
+        // 指定学习数据路径
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd");
-        ParsePosition pos = new ParsePosition(0);
-        Date dt = formatter.parse(otherArgs[5], pos);
-        Calendar cd = Calendar.getInstance();
-        cd.setTime(dt);
+        Date dt1 = formatter.parse(sDate);
+        Date dt2 = formatter.parse(eDate);
+        Calendar cd1 = Calendar.getInstance();
+        cd1.setTime(dt1);
+        int endDs = Integer.parseInt(formatter.format(dt2));
         FileSystem fs = FileSystem.get(conf);
-        for (int i = 0; i < 10; i++) {
-            String tmpPath = histIn + "/ds=" + formatter.format(cd.getTime() + "/tfrome=aphone");
+        for (int i = 1; Integer.parseInt(formatter.format(cd1.getTime())) <= endDs && i < 60; i++) {
+            String tmpPath = histIn + "/ds=" + formatter.format(cd1.getTime()) + "/tfrom=aphone";
             Path tPath = new Path(tmpPath);
             if (fs.exists(tPath)) {
                 FileInputFormat.addInputPath(job, tPath);
@@ -65,9 +67,10 @@ public class UserVisitCovers {
             } else {
                 System.out.println("Not exist " + tmpPath);
             }
-            cd.add(Calendar.DATE, -1);
+            cd1.add(Calendar.DATE, 1);
         }
-        FileOutputFormat.setOutputPath(job, new Path(otherArgs[1]));
+
+        FileOutputFormat.setOutputPath(job, new Path(out));
         System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
 
@@ -76,7 +79,7 @@ public class UserVisitCovers {
         @Override
         public void map(Object key, Text inValue, Context context
         ) throws IOException, InterruptedException {
-            String[] fields = inValue.toString().split("\u0001", 3);
+            String[] fields = inValue.toString().split("\u0001");
             if (fields.length < 3) {
                 return;
             }
