@@ -78,7 +78,7 @@ public class DnnModelUser {
         // method 2: 距离计算
         // 斜率和分母依次对应： <0.8, 1.28>; <0.9, 1.35>; <1, 1.41>； <1.1, 1.49>； <1.2, 1.56>； <1.3, 1.64>； <1.4, 1.72>；
         // <2, 2.4>; <3, 3.16>；<1000, 1000>
-        double gradient = 1000, denominator = 1000;
+        double gradient = 1, denominator = 1.41;
         double diff = gradient*clickRate - noClickRate;
         // stratage 1
         //double probability = diff / Math.sqrt(Math.pow(1, 2) + Math.pow(gradient, 2));

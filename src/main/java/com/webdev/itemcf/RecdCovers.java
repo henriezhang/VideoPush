@@ -79,7 +79,7 @@ public class RecdCovers {
                 if (!coverMap.containsKey(items[0])) {
                     coverMap.put(items[0], tmpv);
                 } else {
-                    int sum = ((Integer) coverMap.get(items[0])).intValue();
+                    int sum = Integer.parseInt(coverMap.get(items[0]).toString());
                     coverMap.put(items[0], sum + tmpv);
                 }
             }
@@ -117,7 +117,7 @@ public class RecdCovers {
                 if (!coverMap.containsKey(items[0])) {
                     coverMap.put(items[0], tmpv);
                 } else {
-                    int sum = ((Integer) coverMap.get(items[0])).intValue();
+                    int sum = Integer.parseInt(coverMap.get(items[0]).toString());
                     coverMap.put(items[0], sum + tmpv);
                 }
             }

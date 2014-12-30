@@ -105,7 +105,7 @@ public class DnnModelMulPredict {
             // 获取最大取值的视频和权重
             StringBuilder sb = new StringBuilder();
             DnnModelItem maxItem = null;
-            double maxRate = 0.0;
+            double maxRate = -1.0;
             double maxClickRate = 0.0;
             double maxNoClickRate = 0.0;
             DnnModelUser u = new DnnModelUser();

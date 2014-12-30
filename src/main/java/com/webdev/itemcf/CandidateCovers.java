@@ -125,7 +125,8 @@ public class CandidateCovers {
                     String coverId = (String) entry.getKey();
                     int value = 0;
                     try {
-                        value = score * ((Integer) entry.getValue()).intValue();
+                        //value = score * ((Integer) entry.getValue()).intValue();
+                        value = score * Integer.parseInt(entry.getValue().toString());
                     } catch (Exception e) {
                     }
                     context.write(uin, new Text(coverId + ":" + value));
