@@ -21,7 +21,7 @@ import java.util.Vector;
 /**
  * Created by henriezhang on 2014/11/5.
  */
-public class WnnModelPredict {
+public class WnnModelMulPredict {
     public static void main(String[] args) throws Exception {
         Configuration conf = new Configuration();
         conf.set("mapred.max.map.failures.percent", "3");
@@ -39,8 +39,8 @@ public class WnnModelPredict {
 
         conf.set("push.video.predictinfo", predictInfo);
         Job job = new Job(conf, "VideoPush");
-        job.setJarByClass(WnnModelPredict.class);
-        job.setMapperClass(DnnModelMulPredictMapper.class);
+        job.setJarByClass(WnnModelMulPredict.class);
+        job.setMapperClass(WnnModelMulPredictMapper.class);
         job.setReducerClass(Reducer.class);
         job.setNumReduceTasks(0);
         // the map output is IntWritable, Text
@@ -62,7 +62,7 @@ public class WnnModelPredict {
         System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
 
-    public static class DnnModelMulPredictMapper
+    public static class WnnModelMulPredictMapper
             extends Mapper<LongWritable, Text, Text, Text> {
         private List<DnnModelItem> ids = new Vector<DnnModelItem>();
 
