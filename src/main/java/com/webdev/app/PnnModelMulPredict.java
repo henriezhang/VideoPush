@@ -29,15 +29,17 @@ public class PnnModelMulPredict {
         conf.set("mapred.queue.name", "gboss");
 
         String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
-        if (otherArgs.length < 3) {
-            System.err.println("Usage: hadoop jar videopush.jar com.webdev.app.DnnModelMulPredict <user_model> <out_path> <predict_info>");
-            System.exit(3);
+        if (otherArgs.length < 4) {
+            System.err.println("Usage: hadoop jar videopush.jar com.webdev.app.PnnModelMulPredict <user_model> <out_path> <predict_info> <gradient>");
+            System.exit(4);
         }
         String userModel = otherArgs[0];
         String outPath = otherArgs[1];
         String predictInfo = otherArgs[2];
+        String gredient =otherArgs[3];
 
         conf.set("push.video.predictinfo", predictInfo);
+        conf.set("push.video.gredient", gredient);
         Job job = new Job(conf, "VideoPush");
         job.setJarByClass(PnnModelMulPredict.class);
         job.setMapperClass(PnnModelMulPredictMapper.class);
@@ -66,6 +68,9 @@ public class PnnModelMulPredict {
             extends Mapper<LongWritable, Text, Text, Text> {
         private List<DnnModelItem> ids = new Vector<DnnModelItem>();
 
+        // 计算数据的斜率
+        private double gradient = 1.0;
+
         private boolean initPredictIds(String info) {
             String[] items = info.split(":");
             for (int i = 0; i < items.length; i++) {
@@ -91,6 +96,14 @@ public class PnnModelMulPredict {
                 System.err.println("init predict info failed");
                 System.exit(10);
             }
+
+            // 获取斜率
+            try {
+                String tmp = conf.get("push.video.gredient");
+                if(tmp!=null) {
+                    gradient = Double.parseDouble(tmp);
+                }
+            } catch (Exception e) {  }
         }
 
         public void map(LongWritable key, Text inValue, Context context)
@@ -112,7 +125,7 @@ public class PnnModelMulPredict {
             if (u.setVec(fields[0], fields[1])) {
                 for (int i = 0; i < this.ids.size(); i++) {
                     DnnModelItem item = this.ids.get(i);
-                    double tmp = u.similarTo(item);
+                    double tmp = u.similarTo(item, gradient);
                     sb.append(item.getId() + " " + tmp + ":");
                     if (tmp >= maxRate) {
                         maxRate = tmp;

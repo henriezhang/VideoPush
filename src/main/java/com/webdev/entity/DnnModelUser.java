@@ -62,28 +62,25 @@ public class DnnModelUser {
         return cos;
     }
 
-    public double similarTo(DnnModelItem item) {
+    public double similarTo(DnnModelItem item, double gradient) {
         if (item == null) {
             return 0.0;
         }
         clickRate = this.cosinSimi(this.simiVec, item.getVec());
         noClickRate = this.cosinSimi(this.noSimiVec, item.getVec());
 
-        // method 0: 直接采用比值方式
-        //return (this.noClickRate==0) ? this.clickRate : this.clickRate/this.noClickRate;
+        // //距离计算
+        // //斜率和分母依次对应： <0.8, 1.28>; <0.9, 1.35>; <1, 1.41>； <1.1, 1.49>； <1.2, 1.56>； <1.3, 1.64>； <1.4, 1.72>；
+        // //<2, 2.4>; <3, 3.16>；<1000, 1000>
+        //double gradient = 1, denominator = 1.41;
+        //double diff = gradient*clickRate - noClickRate;
+        // //stratage 1
+        //double probability = diff / denominator;
 
-        // method 1: 距离计算
-        //double probability = Math.abs(clickRate - noClickRate) / Math.sqrt(Math.sqrt(clickRate) + Math.sqrt(noClickRate));
-
-        // method 2: 距离计算
-        // 斜率和分母依次对应： <0.8, 1.28>; <0.9, 1.35>; <1, 1.41>； <1.1, 1.49>； <1.2, 1.56>； <1.3, 1.64>； <1.4, 1.72>；
-        // <2, 2.4>; <3, 3.16>；<1000, 1000>
-        double gradient = 1, denominator = 1.41;
-        double diff = gradient*clickRate - noClickRate;
         // stratage 1
-        //double probability = diff / Math.sqrt(Math.pow(1, 2) + Math.pow(gradient, 2));
-        // stratage 2
-        double probability = diff / denominator;
+        // double probability = (gradient*clickRate - noClickRate) / Math.sqrt(Math.pow(1, 2) + Math.pow(gradient, 2));
+        double probability = (gradient*clickRate - noClickRate) / Math.sqrt(1.0 + Math.pow(gradient, 2));
+
         return probability;
     }
 }
