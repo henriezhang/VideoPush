@@ -78,10 +78,18 @@ public class UserAction implements Writable {
     }
 
     public void setVisitType(String visitType) {
+        int vType = 0;
         try{
-            this.visitType = Integer.parseInt(visitType);
-        } catch (Exception e){
-            this.visitType = 0;
+            vType = Integer.parseInt(visitType);
+        } catch (Exception e){ }
+        setVisitType(vType);
+    }
+
+    public void setVisitType(int vType) {
+        if(vType==UserAction.CLICK || vType==UserAction.VISIT) {
+            this.visitType = vType;
+        } else {
+            this.visitType = UserAction.NOCLICK;
         }
     }
 

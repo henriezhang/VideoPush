@@ -1,6 +1,6 @@
 package com.webdev.app;
 
-import com.webdev.entity.VideoClick;
+import com.webdev.entity.UserAction;
 import com.webdev.entity.XnnModelItem;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -58,7 +58,7 @@ public class XnnModelBuild {
 
         // the map output is Text, VideoClick
         job.setMapOutputKeyClass(Text.class);
-        job.setMapOutputValueClass(VideoClick.class);
+        job.setMapOutputValueClass(UserAction.class);
 
         // the reduce output is Text, Text
         job.setOutputKeyClass(Text.class);
@@ -84,7 +84,7 @@ public class XnnModelBuild {
             }
 
             // 添加观看时长数据
-            String tmpVisit = histClick + "/ds=" + formatter.format(cd1.getTime()) + "/tfrom=" + tfrom;
+            String tmpVisit = histVisit + "/ds=" + formatter.format(cd1.getTime()) + "/tfrom=" + tfrom;
             Path tVisit = new Path(tmpVisit);
             if (fs.exists(tVisit)) {
                 FileInputFormat.addInputPath(job, tVisit);
@@ -101,26 +101,33 @@ public class XnnModelBuild {
     }
 
     public static class XnnModelBuildMapper
-            extends Mapper<LongWritable, Text, Text, VideoClick> {
+            extends Mapper<LongWritable, Text, Text, UserAction> {
         public void map(LongWritable key, Text inValue, Context context)
                 throws IOException, InterruptedException {
-            String[] fields = inValue.toString().split("\t"); // \u0001
-            // guid 合法性判断
+            String value = inValue.toString();
+            String[] fields = null;
+            UserAction ua = new UserAction();
+            // 数据拆分
+            if (value.indexOf('\t') > 0) { // Push 点击数据
+                fields = value.split("\t");
+                ua.setId(fields[1]);
+                ua.setVisitType(fields[2]);
+            } else { // 观看时长数据
+                fields = value.split("\u0001");
+                ua.setId(fields[1]);
+                ua.setVisitType(UserAction.VISIT);
+            }
+
+            // 数据输出
             if (fields[0].length() != 32) {
                 return;
             }
-
-            if (fields.length >= 3) {
-                VideoClick vc = new VideoClick();
-                vc.setId(fields[1]);
-                vc.setClick(fields[2]);
-                context.write(new Text(fields[0]), vc);
-            }
+            context.write(new Text(fields[0]), ua);
         }
     }
 
     public static class XnnModelBuildReducer
-            extends Reducer<Text, VideoClick, Text, Text> {
+            extends Reducer<Text, UserAction, Text, Text> {
         // 已push文章信息
         private HashMap<String, XnnModelItem> coversInfo = new HashMap<String, XnnModelItem>();
 
@@ -160,7 +167,7 @@ public class XnnModelBuild {
                         XnnModelItem cInfo = new XnnModelItem();
                         cInfo.setVecBuild(test.toString());
                         this.coversInfo.put(cInfo.getId(), cInfo);
-                        //System.out.println( this.coversInfo.size() + ":" + cInfo.getId() + ":" + cInfo.toString());
+                        System.out.println(this.coversInfo.size() + ":" + cInfo.getId() + ":" + cInfo.toString());
                     }
                 } catch (Exception e) {
                     System.err.println("read learn data file failed file=" + fPath.toString());
@@ -182,7 +189,7 @@ public class XnnModelBuild {
         }
 
         // 计算视频的均值向量
-        private double[] statSimiVector(List<VideoClick> hist) {
+        private double[] statSimiVector(List<UserAction> hist) {
             double vec[] = new double[XnnModelItem.VECLEN];
             if (hist == null || hist.size() == 0) {
                 return vec;
@@ -215,31 +222,29 @@ public class XnnModelBuild {
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < XnnModelItem.VECLEN; i++) {
                 sb.append(" ");
-                //sb.append(String.format("%.4f", arr[i]));
                 sb.append(Double.parseDouble(String.format("%.4f", arr[i])));
             }
             return sb.substring(1);
         }
 
-        @Override
-        public void reduce(Text uin, Iterable<VideoClick> clickItems, Context context)
+        public void reduce(Text uin, Iterable<UserAction> clickItems, Context context)
                 throws IOException, InterruptedException {
-            List<VideoClick> allHist = new Vector<VideoClick>();
-            for (VideoClick item : clickItems) {
-                allHist.add(new VideoClick(item)); // 一定要重新生成一个copy，否则数据会有丢失
+            List<UserAction> allHist = new Vector<UserAction>();
+            for (UserAction item : clickItems) {
+                allHist.add(new UserAction(item));
             }
 
             // 存放点击实例的列表
-            List<VideoClick> clickHist = new Vector<VideoClick>();
+            List<UserAction> clickHist = new Vector<UserAction>();
             // 存放没有点击实例的的列表
-            List<VideoClick> noClickHist = new Vector<VideoClick>();
+            List<UserAction> noClickHist = new Vector<UserAction>();
 
             // 对历史数据分类
-            for (VideoClick vc : allHist) {
-                int click = vc.getClick();
-                if (click == VideoClick.CLICK) {
+            for (UserAction vc : allHist) {
+                int click = vc.getVisitType();
+                if (click == UserAction.CLICK || click == UserAction.VISIT) {
                     clickHist.add(vc);
-                } else if (click == VideoClick.NOCLICK) {
+                } else if (click == UserAction.NOCLICK) {
                     noClickHist.add(vc);
                 }
             }
@@ -254,7 +259,6 @@ public class XnnModelBuild {
             } else {
                 System.err.println("invalid vector");
             }
-            // context.write(uin, new Text(clickHist.size() + " " + noClickHist.size()));
         }
     }
 }
