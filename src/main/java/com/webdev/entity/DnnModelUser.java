@@ -62,13 +62,29 @@ public class DnnModelUser {
         return cos;
     }
 
+    // 返回0~1的权值
+    private double euclideanSimi(double[] vec1, double[] vec2) {
+        // 入参判断
+        if (vec1 == null || vec2 == null || vec1.length != DnnModelItem.VECLEN || vec2.length != DnnModelItem.VECLEN) {
+            return 0.0;
+        }
+
+        double sum = 0.0, diff = 0.0;
+        for (int i = 0; i < DnnModelItem.VECLEN; i++) {
+            diff = vec1[i] - vec2[i];
+            sum += diff * diff;
+        }
+        double distance = Math.sqrt(sum);
+        double maxDistance= 2.0 * Math.sqrt(DnnModelItem.VECLEN);
+        return (maxDistance - distance)/maxDistance;
+    }
+
     public double similarTo(DnnModelItem item, double gradient) {
         if (item == null) {
             return 0.0;
         }
-        clickRate = this.cosinSimi(this.simiVec, item.getVec());
+        /*clickRate = this.cosinSimi(this.simiVec, item.getVec());
         noClickRate = this.cosinSimi(this.noSimiVec, item.getVec());
-
         // //距离计算
         // //斜率和分母依次对应： <0.8, 1.28>; <0.9, 1.35>; <1, 1.41>； <1.1, 1.49>； <1.2, 1.56>； <1.3, 1.64>； <1.4, 1.72>；
         // //<2, 2.4>; <3, 3.16>；<1000, 1000>
@@ -76,11 +92,19 @@ public class DnnModelUser {
         //double diff = gradient*clickRate - noClickRate;
         // //stratage 1
         //double probability = diff / denominator;
-
         // stratage 1
         // double probability = (gradient*clickRate - noClickRate) / Math.sqrt(Math.pow(1, 2) + Math.pow(gradient, 2));
         double probability = (gradient*clickRate - noClickRate) / Math.sqrt(1.0 + Math.pow(gradient, 2));
+        return probability;*/
 
+        /*clickRate = this.euclideanSimi(this.simiVec, item.getVec());
+        noClickRate = this.euclideanSimi(this.noSimiVec, item.getVec());
+        double probability = clickRate / noClickRate;
+        return probability;*/
+
+        clickRate = this.euclideanSimi(this.simiVec, item.getVec());
+        noClickRate = this.euclideanSimi(this.noSimiVec, item.getVec());
+        double probability = (clickRate / noClickRate) * Math.log(clickRate+Math.E);
         return probability;
     }
 }
