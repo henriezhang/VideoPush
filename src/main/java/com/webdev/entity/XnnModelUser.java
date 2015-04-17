@@ -79,7 +79,7 @@ public class XnnModelUser {
         return (maxDistance - distance)/maxDistance;
     }
 
-    public double similarTo(XnnModelItem item, double gradient) {
+    public double similarTo(XnnModelItem item, double gradient, double weight) {
         if (item == null) {
             return 0.0;
         }
@@ -97,14 +97,16 @@ public class XnnModelUser {
         double probability = (gradient*clickRate - noClickRate) / Math.sqrt(1.0 + Math.pow(gradient, 2));
         return probability;*/
 
-        /*clickRate = this.euclideanSimi(this.simiVec, item.getVec());
-        noClickRate = this.euclideanSimi(this.noSimiVec, item.getVec());
-        double probability = clickRate / noClickRate;
-        return probability;*/
+        double c1 = this.euclideanSimi(this.simiVec, item.getVec());
+        double nc1 = this.euclideanSimi(this.noSimiVec, item.getVec());
 
-        clickRate = this.euclideanSimi(this.simiVec, item.getVec());
-        noClickRate = this.euclideanSimi(this.noSimiVec, item.getVec());
-        double probability = (clickRate / noClickRate) * Math.log(clickRate+Math.E);
-        return probability;
+        double c2 = this.cosinSimi(this.simiVec, item.getVec());
+        double nc2 = this.cosinSimi(this.noSimiVec, item.getVec());
+
+        clickRate = c1 * weight + c2 * (1-weight);
+        noClickRate = nc1 * weight + nc2 * (1-weight);
+
+        double rete = (gradient*clickRate - noClickRate) / Math.sqrt(1.0 + Math.pow(gradient, 2));
+        return rete;
     }
 }

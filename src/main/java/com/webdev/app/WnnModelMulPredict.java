@@ -1,7 +1,7 @@
 package com.webdev.app;
 
 import com.webdev.entity.DnnModelItem;
-import com.webdev.entity.DnnModelUser;
+import com.webdev.entity.WnnModelUser;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -120,7 +120,7 @@ public class WnnModelMulPredict {
             double maxRate = 0.0;
             double maxClickRate = 0.0;
             double maxNoClickRate = 0.0;
-            DnnModelUser u = new DnnModelUser();
+            WnnModelUser u = new WnnModelUser();
             if (u.setVec(fields[0], fields[1])) {
                 for (int i = 0; i < this.ids.size(); i++) {
                     DnnModelItem item = this.ids.get(i);

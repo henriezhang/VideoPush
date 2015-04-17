@@ -36,7 +36,7 @@ public class DnnModelUser {
     }
 
     // 返回0~1的权值
-    private double cosinSimi(double[] vec1, double[] vec2) {
+    public double cosinSimi(double[] vec1, double[] vec2) {
         // 入参判断
         if (vec1 == null || vec2 == null || vec1.length != DnnModelItem.VECLEN || vec2.length != DnnModelItem.VECLEN) {
             return 0.0;
@@ -63,7 +63,7 @@ public class DnnModelUser {
     }
 
     // 返回0~1的权值
-    private double euclideanSimi(double[] vec1, double[] vec2) {
+    public double euclideanSimi(double[] vec1, double[] vec2) {
         // 入参判断
         if (vec1 == null || vec2 == null || vec1.length != DnnModelItem.VECLEN || vec2.length != DnnModelItem.VECLEN) {
             return 0.0;
@@ -79,10 +79,11 @@ public class DnnModelUser {
         return (maxDistance - distance)/maxDistance;
     }
 
-    public double similarTo(DnnModelItem item, double gradient) {
+    public double similarTo(DnnModelItem item, double gradient, double weight) {
         if (item == null) {
             return 0.0;
         }
+
         /*clickRate = this.cosinSimi(this.simiVec, item.getVec());
         noClickRate = this.cosinSimi(this.noSimiVec, item.getVec());
         // //距离计算
@@ -102,9 +103,21 @@ public class DnnModelUser {
         double probability = clickRate / noClickRate;
         return probability;*/
 
-        clickRate = this.euclideanSimi(this.simiVec, item.getVec());
+        /*clickRate = this.euclideanSimi(this.simiVec, item.getVec());
         noClickRate = this.euclideanSimi(this.noSimiVec, item.getVec());
         double probability = (clickRate / noClickRate) * Math.log(clickRate+Math.E);
-        return probability;
+        return probability;*/
+
+        double c1 = this.euclideanSimi(this.simiVec, item.getVec());
+        double nc1 = this.euclideanSimi(this.noSimiVec, item.getVec());
+
+        double c2 = this.cosinSimi(this.simiVec, item.getVec());
+        double nc2 = this.cosinSimi(this.noSimiVec, item.getVec());
+
+        clickRate = c1 * weight + c2 * (1-weight);
+        noClickRate = nc1 * weight + nc2 * (1-weight);
+
+        double rete = (gradient*clickRate - noClickRate) / Math.sqrt(1.0 + Math.pow(gradient, 2));
+        return rete;
     }
 }

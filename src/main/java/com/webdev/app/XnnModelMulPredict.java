@@ -70,7 +70,9 @@ public class XnnModelMulPredict {
         private List<XnnModelItem> ids = new Vector<XnnModelItem>();
 
         // 计算数据的斜率
-        private double gradient = 1.0;
+        private double gradient = 10;
+
+        private double weight = 0.15;
 
         private boolean initPredictIds(String info) {
             String[] items = info.split(":");
@@ -101,7 +103,11 @@ public class XnnModelMulPredict {
             try {
                 String tmp = conf.get("push.video.gredient");
                 if(tmp!=null) {
-                    gradient = Double.parseDouble(tmp);
+                    String fields[] = tmp.split("-");
+                    if(fields.length==2) {
+                        gradient = Double.parseDouble(fields[0]);
+                        weight = Double.parseDouble(fields[1]);
+                    }
                 }
             } catch (Exception e) {  }
         }
@@ -125,7 +131,7 @@ public class XnnModelMulPredict {
             if (u.setVec(fields[0], fields[1])) {
                 for (int i = 0; i < this.ids.size(); i++) {
                     XnnModelItem item = this.ids.get(i);
-                    double tmp = u.similarTo(item, gradient);
+                    double tmp = u.similarTo(item, gradient, weight);
                     sb.append(item.getId() + " " + tmp + ":");
                     if (tmp >= maxRate) {
                         maxRate = tmp;

@@ -26,7 +26,7 @@ public class PnnModelBuild {
         String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
         System.err.println(otherArgs.length + ":" + otherArgs.toString());
         if (otherArgs.length < 2) {
-            System.err.println("Usage: hadoop jar VideoPush.jar com.webdev.app.WnnModelBuild <click_hist> <out_path>");
+            System.err.println("Usage: hadoop jar VideoPush.jar com.webdev.app.PnnModelBuild <click_hist> <out_path>");
             System.exit(6);
         }
 
